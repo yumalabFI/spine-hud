@@ -1,0 +1,40 @@
+{
+  "project": "Spine HUD",
+  "tasks": [
+    {
+      "name": "Perusrakenne",
+      "status": "done",
+      "progress": 100
+    },
+    {
+      "name": "PySide6 asennus",
+      "status": "done",
+      "progress": 100
+    },
+    {
+      "name": "Ubuntu Qt riippuvuudet",
+      "status": "active",
+      "progress": 60
+    },
+    {
+      "name": "Värillinen kehityspuu",
+      "status": "active",
+      "progress": 30
+    },
+    {
+      "name": "Git live-seuranta",
+      "status": "planned",
+      "progress": 0
+    },
+    {
+      "name": "NOW tila",
+      "status": "planned",
+      "progress": 0
+    },
+    {
+      "name": "GitHub julkaisu",
+      "status": "idle",
+      "progress": 0
+    }
+  ]
+}
