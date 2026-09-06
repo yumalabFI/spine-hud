@@ -6,6 +6,8 @@ It keeps the project structure, current work and Git activity visible while you 
 
 > Current release: Ubuntu v0.1.0-alpha
 
+![Spine HUD screenshot](docs/images/spine-hud.png)
+
 
 ## Installation
 
@@ -13,7 +15,7 @@ Spine HUD currently targets Ubuntu.
 
 Clone the repository and enter the project directory:
 
-    git clone <repository-url>
+    git clone https://github.com/YumaLabFI/spine-hud.git
     cd spine-hud
 
 Create a Python virtual environment:
