@@ -170,13 +170,17 @@ It can update work using the same commands as the developer.
 
 An AI assistant should keep Spine synchronized with actual project progress and should not mark work done merely because code was generated.
 
-A dedicated AI Assistant Guide is planned for v0.1.
+See `docs/AI_ASSISTANT.md` for the dedicated AI Assistant Guide.
 
 ## Run the HUD
 
-From the project directory:
+From the Spine HUD repository:
 
-    python src/main.py
+    .venv/bin/python src/main.py
+
+The startup project selector lets you open registered Spine projects, add projects and reopen the last project automatically if enabled.
+
+Closing the HUD returns to the project selector. Use `QUIT SPINE` to exit Spine completely.
 
 Only one Spine HUD instance can run at a time.
 
