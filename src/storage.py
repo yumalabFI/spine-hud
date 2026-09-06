@@ -173,11 +173,6 @@ def save_spine(path: Path, data: dict) -> None:
             data
         )
 
-        update_roadmap_document(
-            path,
-            data
-        )
-
     except OSError as exc:
         if temp_path and temp_path.exists():
             try:

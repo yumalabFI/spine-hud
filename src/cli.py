@@ -516,18 +516,6 @@ def command_move(data, task_name, relation, target_name):
 
 
 
-def task_git_count(task, changed_files):
-    matches = set()
-
-    for task_path in task.get("paths", []):
-        for changed_file in changed_files:
-            if path_matches(task_path, changed_file):
-                matches.add(changed_file)
-
-    return len(matches)
-
-
-
 def command_roadmap(data, output_path=None):
     if output_path:
         output = Path(output_path)

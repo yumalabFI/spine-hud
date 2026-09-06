@@ -1,4 +1,3 @@
-import json
 import subprocess
 from pathlib import Path
 
@@ -170,57 +169,6 @@ def walk_tree(nodes: list[dict], changed_files: list[str]):
     return result
 
 
-def load_spine(project_path: Path) -> dict:
-    spine_file = project_path / "spine.json"
-
-    data = json.loads(
-        spine_file.read_text(encoding="utf-8")
-    )
-
-    changed_files = get_changed_files(project_path)
-
-    return {
-        "project": data.get("project", project_path.name),
-        "changed_files": changed_files,
-        "tree": walk_tree(
-            data.get("tree", []),
-            changed_files,
-        ),
-    }
-
-
-if __name__ == "__main__":
-    project = Path(__file__).resolve().parent.parent
-
-    state = load_spine(project)
-
-    print(f"\nSPINE: {state['project']}")
-    print("\nChanged files:")
-
-    for file in state["changed_files"]:
-        print(f"  {file}")
-
-    print("\nTask mapping:")
-
-    def print_nodes(nodes, depth=0):
-        for node in nodes:
-            indent = "  " * depth
-
-            git = ""
-
-            if node["git_files"]:
-                git = f"  [git M{len(node['git_files'])}]"
-
-            print(
-                f"{indent}- {node['name']}{git}"
-            )
-
-            print_nodes(
-                node["children"],
-                depth + 1,
-            )
-
-    print_nodes(state["tree"])
 
 MAX_TASK_NAME = 80
 MAX_DEPTH = 8

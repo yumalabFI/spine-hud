@@ -1,12 +1,8 @@
-import json
-import math
-import subprocess
 import uuid
-import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, QSize, QRectF, Signal
-from PySide6.QtGui import QColor, QPainter, QBrush
+from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -428,7 +424,7 @@ class SpineHUD(QMainWindow):
     def save_tree_structure(self):
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         nodes_by_id = {}
@@ -520,6 +516,22 @@ class SpineHUD(QMainWindow):
             return
 
         self.reload_tree()
+
+    def save_project_data(self, data, title="Save failed"):
+        try:
+            save_spine(
+                SPINE_FILE,
+                data
+            )
+        except SpineStorageError as exc:
+            QMessageBox.warning(
+                self,
+                title,
+                str(exc)
+            )
+            return False
+
+        return True
 
     def open_task_menu(self, position):
         item = self.tree.itemAt(position)
@@ -615,7 +627,7 @@ class SpineHUD(QMainWindow):
 
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         removed = False
@@ -654,9 +666,9 @@ class SpineHUD(QMainWindow):
             )
             return
 
-        save_spine(
-            SPINE_FILE,
-            data
+        self.save_project_data(
+            data,
+            "Remove failed"
         )
 
     def rename_task(self, selected_node):
@@ -677,7 +689,7 @@ class SpineHUD(QMainWindow):
 
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         target = None
@@ -706,9 +718,9 @@ class SpineHUD(QMainWindow):
 
         target["name"] = new_name
 
-        save_spine(
-            SPINE_FILE,
-            data
+        self.save_project_data(
+            data,
+            "Rename failed"
         )
 
     def add_child_task(self, selected_node):
@@ -736,7 +748,7 @@ class SpineHUD(QMainWindow):
 
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         target = None
@@ -791,10 +803,11 @@ class SpineHUD(QMainWindow):
             )
             return
 
-        save_spine(
-            SPINE_FILE,
-            data
-        )
+        if not self.save_project_data(
+            data,
+            "Add child failed"
+        ):
+            return
 
         # Muista että tämä parent halutaan pitää auki reloadin jälkeen.
         for item, node in self.item_nodes:
@@ -805,7 +818,7 @@ class SpineHUD(QMainWindow):
     def set_task_status(self, task_name, new_status):
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         selected = None
@@ -849,9 +862,9 @@ class SpineHUD(QMainWindow):
 
         selected["status"] = new_status
 
-        save_spine(
-            SPINE_FILE,
-            data
+        self.save_project_data(
+            data,
+            "Status update failed"
         )
 
     def return_to_active_task(self):
@@ -883,7 +896,7 @@ class SpineHUD(QMainWindow):
 
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             return
 
         selected = None
@@ -916,9 +929,9 @@ class SpineHUD(QMainWindow):
 
         selected["status"] = "active"
 
-        save_spine(
-            SPINE_FILE,
-            data
+        self.save_project_data(
+            data,
+            "Start task failed"
         )
 
     def check_spine_file(self):
@@ -956,7 +969,7 @@ class SpineHUD(QMainWindow):
 
         try:
             data = load_spine(SPINE_FILE)
-        except Exception:
+        except SpineStorageError:
             self.project_label.setText("INVALID spine.json")
             return
 

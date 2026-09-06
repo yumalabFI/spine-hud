@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 
 try:
     from .projects import (
+        ProjectRegistryError,
         load_projects,
         add_project,
         rename_project,
@@ -27,6 +28,7 @@ try:
     )
 except ImportError:
     from projects import (
+        ProjectRegistryError,
         load_projects,
         add_project,
         rename_project,
@@ -441,7 +443,7 @@ class ProjectSelector(QDialog):
 
         try:
             project = add_project(path)
-        except Exception as exc:
+        except ProjectRegistryError as exc:
             QMessageBox.warning(
                 self,
                 "Add project failed",
@@ -535,7 +537,7 @@ class ProjectSelector(QDialog):
                 path,
                 name
             )
-        except Exception as exc:
+        except ProjectRegistryError as exc:
             QMessageBox.warning(
                 self,
                 "Rename failed",
@@ -572,7 +574,7 @@ class ProjectSelector(QDialog):
 
         try:
             remove_project(path)
-        except Exception as exc:
+        except ProjectRegistryError as exc:
             QMessageBox.warning(
                 self,
                 "Remove failed",
