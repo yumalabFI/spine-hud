@@ -32,24 +32,27 @@ Create the `spine` command inside the virtual environment:
 
     cat > .venv/bin/spine <<EOF
     #!/bin/bash
-    python "$(pwd)/src/cli.py" "$@"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    exec "$SCRIPT_DIR/python" "$(pwd)/src/cli.py" "$@"
     EOF
 
     chmod +x .venv/bin/spine
 
-With the virtual environment active, verify the installation:
-
-    spine status
-
 Run the HUD:
 
-    python src/main.py
+    .venv/bin/python src/main.py
 
 For a new project, initialize Spine with:
 
-    spine init /path/to/project
+    .venv/bin/spine init /path/to/project
 
-Spine currently requires the virtual environment to be active for the `spine` command. A system-wide installer and Ubuntu autostart setup are planned for the v0.1 release workflow.
+Then enter that project and verify its roadmap:
+
+    cd /path/to/project
+    /path/to/spine-hud/.venv/bin/spine status
+
+The Spine HUD repository itself does not need to be a Spine-managed project.
+A system-wide installer is planned for a later release.
 
 ## Project tree
 
