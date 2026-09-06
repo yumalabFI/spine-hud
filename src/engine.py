@@ -35,6 +35,100 @@ def get_changed_files(project_path: Path) -> list[str]:
     return changed
 
 
+
+def get_last_commit(project_path: Path) -> dict | None:
+    commit_hash = run_git(
+        project_path,
+        "log",
+        "-1",
+        "--format=%H"
+    )
+
+    if not commit_hash:
+        return None
+
+    short_hash = run_git(
+        project_path,
+        "log",
+        "-1",
+        "--format=%h"
+    )
+
+    message = run_git(
+        project_path,
+        "log",
+        "-1",
+        "--format=%s"
+    )
+
+    timestamp = run_git(
+        project_path,
+        "log",
+        "-1",
+        "--format=%cI"
+    )
+
+    files_output = run_git(
+        project_path,
+        "show",
+        "--pretty=",
+        "--name-only",
+        commit_hash
+    )
+
+    files = sorted(
+        {
+            line.strip()
+            for line in files_output.splitlines()
+            if line.strip()
+        }
+    )
+
+    return {
+        "hash": commit_hash,
+        "short_hash": short_hash,
+        "message": message,
+        "timestamp": timestamp,
+        "files": files,
+    }
+
+
+def task_commit_files(task: dict, commit_files: list[str]) -> list[str]:
+    matches = []
+
+    for task_path in task.get("paths", []):
+        for committed in commit_files:
+            if path_matches(task_path, committed):
+                matches.append(committed)
+
+    return sorted(set(matches))
+
+
+def task_git_state(
+    task: dict,
+    changed_files: list[str],
+    commit_files: list[str],
+) -> dict:
+    changed = task_git_files(
+        task,
+        changed_files
+    )
+
+    committed = task_commit_files(
+        task,
+        commit_files
+    )
+
+    return {
+        "changed": changed,
+        "committed": committed,
+        "ready": (
+            bool(committed)
+            and not changed
+        ),
+    }
+
+
 def path_matches(task_path: str, changed_file: str) -> bool:
     task_path = task_path.rstrip("/")
 
@@ -127,8 +221,6 @@ if __name__ == "__main__":
             )
 
     print_nodes(state["tree"])
-# test
-# git live test
 
 MAX_TASK_NAME = 80
 MAX_DEPTH = 8

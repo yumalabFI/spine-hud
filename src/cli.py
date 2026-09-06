@@ -5,7 +5,9 @@ from pathlib import Path
 
 from engine import (
     get_changed_files,
+    get_last_commit,
     path_matches,
+    task_git_state,
 )
 
 from storage import (
@@ -465,9 +467,19 @@ def command_status(data):
 
     changed_files = get_changed_files(PROJECT)
 
+    commit = get_last_commit(PROJECT)
+    commit_files = (
+        commit.get("files", [])
+        if commit
+        else []
+    )
+
     def show(nodes, depth=0):
         for task in nodes:
-            status = task.get("status", "planned")
+            status = task.get(
+                "status",
+                "planned"
+            )
 
             icon = {
                 "done": "✓",
@@ -477,22 +489,30 @@ def command_status(data):
                 "idle": "○",
             }.get(status, "○")
 
-            git_count = 0
+            git_text = ""
 
-            if (
-                not task.get("children")
-                and task.get("status") == "active"
-            ):
-                git_count = task_git_count(
+            # Näytä Git vain leaf-taskille.
+            if not task.get("children"):
+                state = task_git_state(
                     task,
-                    changed_files
+                    changed_files,
+                    commit_files
                 )
 
-            git_text = (
-                f"   M{git_count}"
-                if git_count
-                else ""
-            )
+                if status == "active":
+                    if state["changed"]:
+                        git_text = (
+                            f"   M{len(state['changed'])}"
+                        )
+
+                    elif state["ready"]:
+                        git_text = "   READY?"
+
+                elif (
+                    status == "done"
+                    and state["committed"]
+                ):
+                    git_text = "   C"
 
             print(
                 f"{'  ' * depth}"
@@ -506,7 +526,6 @@ def command_status(data):
             )
 
     show(data.get("tree", []))
-
 
 
 def main():

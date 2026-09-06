@@ -52,14 +52,18 @@ COLORS = {
 try:
     from .engine import (
         get_changed_files,
+        get_last_commit,
         path_matches,
         calculated_status,
+        task_git_state,
     )
 except ImportError:
     from engine import (
         get_changed_files,
+        get_last_commit,
         path_matches,
         calculated_status,
+        task_git_state,
     )
 
 
@@ -1030,30 +1034,80 @@ class SpineHUD(QMainWindow):
     def update_git(self):
         changed_files = git_changed_files()
 
+        commit = get_last_commit(PROJECT)
+
+        commit_files = (
+            commit.get("files", [])
+            if commit
+            else []
+        )
+
         for item, node in self.item_nodes:
-            is_active_leaf = (
-                not node.get("children")
-                and node.get("status") == "active"
+            # Oksille ei Git-tekstiä.
+            if node.get("children"):
+                item.setText(1, "–")
+                item.setForeground(
+                    1,
+                    QColor("#555b63")
+                )
+                continue
+
+            state = task_git_state(
+                node,
+                changed_files,
+                commit_files
             )
 
-            if is_active_leaf:
-                count = node_git_count(
-                    node,
-                    changed_files
-                )
-            else:
-                count = 0
+            status = node.get(
+                "status",
+                "planned"
+            )
 
-            if count:
+            # Aktiivinen + muuttuneita tiedostoja
+            if (
+                status == "active"
+                and state["changed"]
+            ):
                 item.setText(
                     1,
-                    f"M{count}"
+                    f"M{len(state['changed'])}"
                 )
 
                 item.setForeground(
                     1,
                     QColor("#f3a847")
                 )
+
+            # Aktiivinen + commitattu + clean
+            elif (
+                status == "active"
+                and state["ready"]
+            ):
+                item.setText(
+                    1,
+                    "READY?"
+                )
+
+                item.setForeground(
+                    1,
+                    QColor("#42d66b")
+                )
+
+            # Valmis + commit löytyy
+            elif (
+                status == "done"
+                and state["committed"]
+            ):
+                item.setText(
+                    1,
+                    "C"
+                )
+
+                item.setForeground(
+                    1,
+                    QColor("#42d66b")
+                )
+
             else:
                 item.setText(
                     1,

@@ -321,7 +321,7 @@
                 },
                 {
                   "name": "Commit detection",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/engine.py"
                   ],
@@ -330,7 +330,7 @@
                 },
                 {
                   "name": "Ready suggestion after commit",
-                  "status": "planned",
+                  "status": "active",
                   "paths": [
                     "src/engine.py"
                   ],
@@ -339,7 +339,7 @@
                 },
                 {
                   "name": "Show Git changes only on active task",
-                  "status": "active",
+                  "status": "done",
                   "paths": [
                     "src/cli.py",
                     "src/hud.py"
