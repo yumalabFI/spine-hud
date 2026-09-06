@@ -1,0 +1,264 @@
+{
+  "project": "Spine HUD",
+  "tree": [
+    {
+      "name": "Foundation",
+      "children": [
+        {
+          "name": "Project structure",
+          "status": "done",
+          "paths": []
+        },
+        {
+          "name": "PySide6 setup",
+          "status": "done",
+          "paths": []
+        },
+        {
+          "name": "Ubuntu always-on-top HUD",
+          "status": "done",
+          "paths": [
+            "src/main.py"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roadmap",
+      "children": [
+        {
+          "name": "v0.1 Ubuntu",
+          "children": [
+            {
+              "name": "Expandable project tree",
+              "status": "done",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "Automatic parent status",
+              "status": "done",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "Stable branch state",
+              "status": "done",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "CLI start done block",
+              "status": "done",
+              "paths": [
+                "src/cli.py"
+              ]
+            },
+            {
+              "name": "Automatic next task",
+              "status": "done",
+              "paths": [
+                "src/cli.py"
+              ]
+            },
+            {
+              "name": "Changed file detection",
+              "status": "done",
+              "paths": [
+                "src/engine.py"
+              ]
+            },
+            {
+              "name": "Map files to tasks",
+              "status": "done",
+              "paths": [
+                "src/engine.py",
+                "spine.json"
+              ]
+            },
+            {
+              "name": "Git status beside task",
+              "status": "active",
+              "paths": [
+                "src/main.py",
+                "src/engine.py"
+              ]
+            },
+            {
+              "name": "Breathing active dot",
+              "status": "planned",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "spine add remove move",
+              "status": "planned",
+              "paths": [
+                "src/cli.py"
+              ]
+            },
+            {
+              "name": "spine init",
+              "status": "planned",
+              "paths": [
+                "src/cli.py"
+              ]
+            },
+            {
+              "name": "README instructions",
+              "status": "planned",
+              "paths": [
+                "README.md"
+              ]
+            },
+            {
+              "name": "License review",
+              "status": "planned",
+              "paths": [
+                "LICENSE"
+              ]
+            },
+            {
+              "name": "Screenshot",
+              "status": "planned",
+              "paths": [
+                "assets"
+              ]
+            },
+            {
+              "name": "GitHub repository",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Release v0.1.0-alpha",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Resizable HUD window",
+              "status": "active",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "Scrollable project tree",
+              "status": "planned",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "Remember window size and position",
+              "status": "planned",
+              "paths": [
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "Multi display DPI scaling",
+              "status": "planned",
+              "paths": [
+                "src/main.py"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "v0.2",
+          "children": [
+            {
+              "name": "Commit detection",
+              "status": "planned",
+              "paths": [
+                "src/engine.py"
+              ]
+            },
+            {
+              "name": "Ready suggestion",
+              "status": "planned",
+              "paths": [
+                "src/engine.py"
+              ]
+            },
+            {
+              "name": "Automatic activity detection",
+              "status": "planned",
+              "paths": [
+                "src/engine.py"
+              ]
+            },
+            {
+              "name": "Git ahead behind",
+              "status": "planned",
+              "paths": [
+                "src/engine.py",
+                "src/main.py"
+              ]
+            },
+            {
+              "name": "GitHub integration",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "CI status",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Windows version",
+              "status": "planned",
+              "paths": []
+            }
+          ]
+        },
+        {
+          "name": "Team",
+          "children": [
+            {
+              "name": "Shared live project tree",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Task owner",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Live developer position",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Collision warning",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Join same task",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Multiple developers per task",
+              "status": "planned",
+              "paths": []
+            },
+            {
+              "name": "Shared Git PR CI status",
+              "status": "planned",
+              "paths": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
