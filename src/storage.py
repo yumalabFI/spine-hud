@@ -50,6 +50,79 @@ def load_spine(path: Path) -> dict:
     return data
 
 
+
+def roadmap_markdown(data: dict) -> str:
+    project = data.get("project", "Project")
+
+    lines = [
+        f"# {project} Roadmap",
+        "",
+        "> Generated automatically from `spine.json`.",
+        "",
+    ]
+
+    def write_nodes(nodes, depth=0):
+        for node in nodes:
+            name = node.get("name", "Unnamed")
+            status = node.get("status", "planned")
+            children = node.get("children", [])
+
+            indent = "  " * depth
+
+            if children:
+                lines.append(
+                    f"{indent}- **{name}**"
+                )
+            else:
+                mark = "x" if status == "done" else " "
+
+                suffix = ""
+
+                if status == "active":
+                    suffix = " — active"
+                elif status == "blocked":
+                    suffix = " — blocked"
+
+                lines.append(
+                    f"{indent}- [{mark}] {name}{suffix}"
+                )
+
+            write_nodes(
+                children,
+                depth + 1
+            )
+
+    write_nodes(
+        data.get("tree", [])
+    )
+
+    return "\n".join(lines) + "\n"
+
+
+def update_roadmap_document(
+    spine_path: Path,
+    data: dict
+) -> None:
+    spine_path = Path(spine_path)
+
+    # Vain oikealle spine.json-projektille.
+    if spine_path.name != "spine.json":
+        return
+
+    docs_dir = spine_path.parent / "docs"
+    roadmap_path = docs_dir / "ROADMAP.md"
+
+    docs_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    roadmap_path.write_text(
+        roadmap_markdown(data),
+        encoding="utf-8"
+    )
+
+
 def save_spine(path: Path, data: dict) -> None:
     path = Path(path)
 
@@ -93,6 +166,16 @@ def save_spine(path: Path, data: dict) -> None:
         os.replace(
             temp_path,
             path
+        )
+
+        update_roadmap_document(
+            path,
+            data
+        )
+
+        update_roadmap_document(
+            path,
+            data
         )
 
     except OSError as exc:

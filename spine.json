@@ -330,7 +330,7 @@
                 },
                 {
                   "name": "Ready suggestion after commit",
-                  "status": "active",
+                  "status": "done",
                   "paths": [
                     "src/engine.py"
                   ],
@@ -431,7 +431,7 @@
                 },
                 {
                   "name": "spine init skeleton",
-                  "status": "blocked",
+                  "status": "done",
                   "paths": [
                     "src/cli.py"
                   ],
@@ -476,19 +476,20 @@
                 },
                 {
                   "name": "Regression test current features",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [],
                   "id": "task-9551498b54c3",
                   "order": 40
                 },
                 {
                   "name": "No duplicate HUD instances",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/main.py"
                   ],
                   "id": "task-7398d2da2307",
-                  "order": 50
+                  "order": 50,
+                  "children": []
                 }
               ],
               "order": 60,
@@ -500,7 +501,7 @@
               "children": [
                 {
                   "name": "README instructions",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "README.md"
                   ],
@@ -509,7 +510,7 @@
                 },
                 {
                   "name": "Installation instructions",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "README.md"
                   ],
@@ -518,7 +519,7 @@
                 },
                 {
                   "name": "Generate docs ROADMAP",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/cli.py",
                     "src/engine.py",
@@ -529,7 +530,7 @@
                 },
                 {
                   "name": "Auto update roadmap docs",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/engine.py",
                     "docs/ROADMAP.md"
@@ -539,7 +540,7 @@
                 },
                 {
                   "name": "AI Assistant Guide",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "docs/AI_ASSISTANT.md"
                   ],
@@ -556,7 +557,7 @@
               "children": [
                 {
                   "name": "Project registry",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/storage.py"
                   ],
@@ -565,7 +566,7 @@
                 },
                 {
                   "name": "Project selector on startup",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/storage.py"
@@ -575,7 +576,7 @@
                 },
                 {
                   "name": "Mouse project selection",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py"
                   ],
@@ -584,7 +585,7 @@
                 },
                 {
                   "name": "Keyboard project selection",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py"
                   ],
@@ -593,7 +594,7 @@
                 },
                 {
                   "name": "Last opened project arrow",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/storage.py"
@@ -603,7 +604,7 @@
                 },
                 {
                   "name": "Project status colors",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/engine.py"
@@ -613,7 +614,7 @@
                 },
                 {
                   "name": "Project change status",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/engine.py"
@@ -623,7 +624,7 @@
                 },
                 {
                   "name": "Last changed date and time",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/engine.py"
@@ -633,7 +634,7 @@
                 },
                 {
                   "name": "Remember project UI state",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/storage.py",
                     "src/hud.py"
@@ -643,7 +644,7 @@
                 },
                 {
                   "name": "Add project",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/storage.py"
@@ -653,7 +654,7 @@
                 },
                 {
                   "name": "Remove project from Spine",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/hud.py",
                     "src/storage.py"
@@ -663,7 +664,7 @@
                 },
                 {
                   "name": "Scan Git projects",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/engine.py",
                     "src/storage.py"
@@ -673,7 +674,7 @@
                 },
                 {
                   "name": "Ignore discovered project",
-                  "status": "planned",
+                  "status": "done",
                   "paths": [
                     "src/storage.py"
                   ],
@@ -682,13 +683,30 @@
                 },
                 {
                   "name": "Ubuntu autostart",
-                  "status": "planned",
+                  "status": "blocked",
                   "paths": [
                     "src/cli.py",
                     "src/storage.py"
                   ],
                   "id": "task-51279483e98f",
                   "order": 140
+                },
+                {
+                  "name": "HUD close returns to project selector",
+                  "status": "done",
+                  "paths": [
+                    "src/main.py",
+                    "src/hud.py",
+                    "src/project_selector.py"
+                  ]
+                },
+                {
+                  "name": "Open last project on startup",
+                  "status": "done",
+                  "paths": [
+                    "src/main.py",
+                    "src/project_selector.py"
+                  ]
                 }
               ],
               "order": 80,
@@ -709,7 +727,7 @@
                 },
                 {
                   "name": "Screenshot",
-                  "status": "planned",
+                  "status": "active",
                   "paths": [
                     "assets"
                   ],

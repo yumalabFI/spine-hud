@@ -14,6 +14,7 @@ from storage import (
     SpineStorageError,
     load_spine,
     save_spine,
+    roadmap_markdown,
 )
 
 PROJECT = Path.cwd()
@@ -171,6 +172,70 @@ def command_next(data):
 
 
 
+
+
+
+def command_init(project_path=None):
+    if project_path:
+        project = Path(project_path).expanduser().resolve()
+    else:
+        project = Path.cwd()
+
+    spine_file = project / "spine.json"
+
+    if spine_file.exists():
+        print(f"spine.json already exists: {spine_file}")
+        sys.exit(1)
+
+    project.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    def node(name, order):
+        return {
+            "id": f"task-{uuid.uuid4().hex[:12]}",
+            "name": name,
+            "status": "planned",
+            "order": order,
+            "paths": [],
+            "children": []
+        }
+
+    roadmap = node("Roadmap", 10)
+    version = node("v0.1", 10)
+
+    version["children"] = [
+        node("Core", 10),
+        node("UI", 20),
+        node("Integration", 30),
+        node("Tests", 40),
+        node("Docs", 50),
+        node("Release", 60),
+    ]
+
+    roadmap["children"] = [version]
+
+    data = {
+        "project": project.name,
+        "tree": [roadmap]
+    }
+
+    try:
+        save_spine(
+            spine_file,
+            data
+        )
+    except SpineStorageError as exc:
+        print(f"Spine error: {exc}")
+        sys.exit(1)
+
+    print(
+        f"✓ Spine project initialized: {project}"
+    )
+    print(
+        f"✓ Created: {spine_file}"
+    )
 
 
 def command_remove(data, task_name):
@@ -462,6 +527,28 @@ def task_git_count(task, changed_files):
     return len(matches)
 
 
+
+def command_roadmap(data, output_path=None):
+    if output_path:
+        output = Path(output_path)
+    else:
+        output = PROJECT / "docs" / "ROADMAP.md"
+
+    output.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    output.write_text(
+        roadmap_markdown(data),
+        encoding="utf-8"
+    )
+
+    print(
+        f"✓ Roadmap generated: {output}"
+    )
+
+
 def command_status(data):
     print(f"\nSPINE — {data.get('project', PROJECT.name)}\n")
 
@@ -529,10 +616,44 @@ def command_status(data):
 
 
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "init":
+        if len(sys.argv) == 2:
+            command_init()
+
+        elif len(sys.argv) == 3:
+            command_init(
+                sys.argv[2]
+            )
+
+        else:
+            print(
+                "Usage:\n"
+                "  spine init\n"
+                "  spine init /path/to/project"
+            )
+
+        return
+
     data = load()
 
     if len(sys.argv) == 1:
         command_status(data)
+        return
+
+    if sys.argv[1] == "roadmap":
+        if len(sys.argv) == 2:
+            command_roadmap(data)
+        elif len(sys.argv) == 3:
+            command_roadmap(
+                data,
+                sys.argv[2]
+            )
+        else:
+            print(
+                "Usage:\n"
+                "  spine roadmap\n"
+                "  spine roadmap /path/to/ROADMAP.md"
+            )
         return
 
     if sys.argv[1] == "status":

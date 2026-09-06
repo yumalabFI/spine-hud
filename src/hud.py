@@ -5,7 +5,7 @@ import uuid
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, QSize, QRectF
+from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, QSize, QRectF, Signal
 from PySide6.QtGui import QColor, QPainter, QBrush
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -90,6 +90,7 @@ def node_git_count(node, changed_files):
 
 
 class SpineHUD(QMainWindow):
+    project_menu_requested = Signal()
     def __init__(self):
         super().__init__()
 
@@ -102,7 +103,26 @@ class SpineHUD(QMainWindow):
         self.arrow_phase = False
 
 
-        self.settings = QSettings("YumaLab", "SpineHUD")
+        # UI state is stored separately for each project.
+        project_key = str(PROJECT.resolve())
+
+        self.settings = QSettings(
+            "YumaLab",
+            "SpineHUD"
+        )
+
+        self.project_settings = QSettings(
+            "YumaLab",
+            "SpineHUD",
+        )
+
+        self.project_settings.beginGroup(
+            "projects"
+        )
+
+        self.project_settings.beginGroup(
+            project_key.replace("/", "_")
+        )
 
         self.setWindowTitle("Spine HUD")
 
@@ -139,7 +159,7 @@ class SpineHUD(QMainWindow):
 
         close = QPushButton("×")
         close.setFixedSize(24, 24)
-        close.clicked.connect(self.close)
+        close.clicked.connect(self.return_to_project_menu)
 
         close.setStyleSheet("""
             QPushButton {
@@ -284,10 +304,21 @@ class SpineHUD(QMainWindow):
 
 
     def restore_window_geometry(self):
-        geometry = self.settings.value("geometry")
+        x = self.settings.value("x")
+        y = self.settings.value("y")
+        width = self.settings.value("width")
+        height = self.settings.value("height")
 
-        if geometry:
-            self.restoreGeometry(geometry)
+        if None not in (x, y, width, height):
+            try:
+                self.setGeometry(
+                    int(x),
+                    int(y),
+                    int(width),
+                    int(height)
+                )
+            except (TypeError, ValueError):
+                pass
 
         # Varmista että HUD jää näkyvälle näytölle.
         window_rect = self.frameGeometry()
@@ -310,11 +341,42 @@ class SpineHUD(QMainWindow):
                     area.top() + 20
                 )
 
+    def return_to_project_menu(self):
+        geometry = self.geometry()
+
+        self.settings.setValue("x", geometry.x())
+        self.settings.setValue("y", geometry.y())
+        self.settings.setValue("width", geometry.width())
+        self.settings.setValue("height", geometry.height())
+        self.settings.sync()
+
+        self.project_menu_requested.emit()
+
     def closeEvent(self, event):
+        if hasattr(self, "project_settings"):
+            self.project_settings.endGroup()
+            self.project_settings.sync()
+
+        geometry = self.geometry()
+
         self.settings.setValue(
-            "geometry",
-            self.saveGeometry()
+            "x",
+            geometry.x()
         )
+        self.settings.setValue(
+            "y",
+            geometry.y()
+        )
+        self.settings.setValue(
+            "width",
+            geometry.width()
+        )
+        self.settings.setValue(
+            "height",
+            geometry.height()
+        )
+
+        self.settings.sync()
         event.accept()
 
     def mousePressEvent(self, event):

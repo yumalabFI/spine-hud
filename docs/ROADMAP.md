@@ -1,0 +1,107 @@
+# Spine HUD Roadmap
+
+> Generated automatically from `spine.json`.
+
+- **Roadmap**
+  - **v0.1 Ubuntu**
+    - **Architecture**
+      - [x] Create storage module
+      - [x] Central load save API
+      - [x] Atomic spine json save
+      - [x] Validation on every write
+      - [x] Move HUD code to hud module
+      - [x] Keep main as launcher only
+      - [x] Models and task helpers cleanup
+    - **HUD**
+      - [x] Ubuntu always-on-top HUD
+      - [x] Resizable HUD window
+      - [x] Scrollable project tree
+      - [x] Remember window size and position
+      - [x] Active moving arrow marker
+      - [x] Right click task menu
+      - [x] Multi display DPI scaling
+    - **Project Tree**
+      - [x] Expandable branches
+      - [x] Automatic parent status
+      - [x] Stable branch state
+      - [x] Add child
+      - [x] Rename task
+      - [x] Remove task
+      - [x] Persistent task IDs
+      - [x] Task order fields
+      - [x] Move task
+      - [x] Move between branches
+      - [x] Drag reorder tasks
+      - [ ] Ctrl up down reorder — blocked
+    - **Git**
+      - [x] Changed file detection
+      - [x] Map files to tasks
+      - [x] Git status beside task
+      - [x] Commit detection
+      - [x] Ready suggestion after commit
+      - [x] Show Git changes only on active task
+    - **CLI**
+      - [x] spine status
+      - [x] spine TASK start
+      - [x] spine TASK done
+      - [x] spine TASK block
+      - [x] spine add
+      - [x] spine rename
+      - [x] spine remove
+      - [x] spine move
+      - [x] spine init skeleton
+    - **Stabilization**
+      - [x] Input limits
+      - [x] Duplicate name protection
+      - [x] Safe delete validation
+      - [x] Regression test current features
+      - [x] No duplicate HUD instances
+    - **Docs**
+      - [x] README instructions
+      - [x] Installation instructions
+      - [x] Generate docs ROADMAP
+      - [x] Auto update roadmap docs
+      - [x] AI Assistant Guide
+    - **Startup & Projects**
+      - [x] Project registry
+      - [x] Project selector on startup
+      - [x] Mouse project selection
+      - [x] Keyboard project selection
+      - [x] Last opened project arrow
+      - [x] Project status colors
+      - [x] Project change status
+      - [x] Last changed date and time
+      - [x] Remember project UI state
+      - [x] Add project
+      - [x] Remove project from Spine
+      - [x] Scan Git projects
+      - [x] Ignore discovered project
+      - [ ] Ubuntu autostart — blocked
+      - [x] HUD close returns to project selector
+      - [x] Open last project on startup
+    - **Release**
+      - [x] PolyForm Noncommercial + Commercial License
+      - [ ] Screenshot — active
+      - [ ] GitHub repository
+      - [ ] Release v0.1.0-alpha
+  - **v0.2**
+    - **Automation**
+      - [ ] Automatic activity detection
+      - [ ] Git ahead behind
+    - **Integrations**
+      - [ ] GitHub integration
+      - [ ] CI status
+    - **Platforms**
+      - [ ] Windows version
+  - **Team**
+    - **Shared State**
+      - [ ] Persistent task IDs
+      - [ ] Shared authoritative state
+      - [ ] Live sync between HUDs
+      - [ ] Conflict handling
+    - **Collaboration**
+      - [ ] Task owner
+      - [ ] Live developer position
+      - [ ] Collision warning
+      - [ ] Join same task
+      - [ ] Multiple developers per task

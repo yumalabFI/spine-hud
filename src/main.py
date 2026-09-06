@@ -1,16 +1,143 @@
 import sys
+import tempfile
+from pathlib import Path
 
-try:
-    from .hud import SpineHUD
-except ImportError:
-    from hud import SpineHUD
-
+from PySide6.QtCore import QLockFile, QTimer, QSettings
 from PySide6.QtWidgets import QApplication
 
+try:
+    from . import hud as hud_module
+    from .project_selector import select_project
+    from .projects import set_last_opened
+except ImportError:
+    import hud as hud_module
+    from project_selector import select_project
+    from projects import set_last_opened
 
-app = QApplication(sys.argv)
 
-window = SpineHUD()
-window.show()
+app = None
+lock = None
+window = None
 
-sys.exit(app.exec())
+
+def open_project(project):
+    global window
+
+    project = Path(project).resolve()
+
+    hud_module.PROJECT = project
+    hud_module.SPINE_FILE = project / "spine.json"
+
+    set_last_opened(project)
+
+    settings = QSettings(
+        "YumaLab",
+        "SpineHUD"
+    )
+
+    settings.setValue(
+        "last_opened_project",
+        str(project)
+    )
+
+    settings.sync()
+
+    window = hud_module.SpineHUD()
+
+    window.project_menu_requested.connect(
+        show_project_menu_from_hud
+    )
+
+    window.show()
+
+
+def show_project_menu(use_last_project=True):
+    global window
+
+    if window is not None:
+        window.hide()
+        window.deleteLater()
+        window = None
+
+    # Vain ohjelman ensimmäinen käynnistys käyttää
+    # "Open last project on startup" -asetusta.
+    if use_last_project:
+        settings = QSettings(
+            "YumaLab",
+            "SpineHUD"
+        )
+
+        open_last = settings.value(
+            "open_last_project",
+            False,
+            type=bool
+        )
+
+        last_opened = settings.value(
+            "last_opened_project",
+            "",
+            type=str
+        )
+
+        if open_last and last_opened:
+            project = (
+                Path(last_opened)
+                .expanduser()
+                .resolve()
+            )
+
+            if (project / "spine.json").exists():
+                open_project(project)
+                return
+
+    project = select_project()
+
+    if project is None:
+        app.quit()
+        return
+
+    open_project(project)
+
+
+def show_project_menu_from_hud():
+    # HUDin X tarkoittaa aina takaisin projektivalikkoon.
+    # Viimeistä projektia ei avata automaattisesti tässä.
+    show_project_menu(
+        use_last_project=False
+    )
+
+
+def main():
+    global app, lock
+
+    app = QApplication(sys.argv)
+
+    # Projektivalikko saa olla hetken ainoa ikkuna
+    # ilman että QApplication lopettaa.
+    app.setQuitOnLastWindowClosed(False)
+
+    lock_path = (
+        Path(tempfile.gettempdir())
+        / "spine-hud.lock"
+    )
+
+    lock = QLockFile(str(lock_path))
+
+    if not lock.tryLock(100):
+        return 0
+
+    QTimer.singleShot(
+        0,
+        lambda: show_project_menu(
+            use_last_project=True
+        )
+    )
+
+    try:
+        return app.exec()
+    finally:
+        lock.unlock()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
