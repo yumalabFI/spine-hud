@@ -32,8 +32,8 @@ Create the `spine` command inside the virtual environment:
 
     cat > .venv/bin/spine <<EOF
     #!/bin/bash
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    exec "$SCRIPT_DIR/python" "$(pwd)/src/cli.py" "$@"
+    SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+    exec "\$SCRIPT_DIR/python" "$(pwd)/src/cli.py" "\$@"
     EOF
 
     chmod +x .venv/bin/spine
