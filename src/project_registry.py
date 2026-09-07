@@ -103,99 +103,6 @@ def save_projects(data: dict) -> None:
         ) from exc
 
 
-
-def scan_git_projects(
-    roots=None,
-    max_depth=4
-) -> list[dict]:
-    if roots is None:
-        roots = [Path.home()]
-
-    registry = load_projects()
-
-    registered = {
-        project.get("path")
-        for project in registry.get("projects", [])
-    }
-
-    ignored = {
-        project.get("path")
-        for project in registry.get("ignored", [])
-    }
-
-    found = []
-    visited = set()
-
-    for root in roots:
-        root = Path(root).expanduser().resolve()
-
-        if not root.exists():
-            continue
-
-        try:
-            candidates = root.rglob("spine.json")
-        except OSError:
-            continue
-
-        for spine_file in candidates:
-            try:
-                project_path = spine_file.parent.resolve()
-            except OSError:
-                continue
-
-            if project_path in visited:
-                continue
-
-            visited.add(project_path)
-
-            try:
-                relative = project_path.relative_to(root)
-                depth = len(relative.parts)
-            except ValueError:
-                continue
-
-            if depth > max_depth:
-                continue
-
-            git_dir = project_path / ".git"
-
-            if not git_dir.exists():
-                continue
-
-            path_text = str(project_path)
-
-            if path_text in registered:
-                continue
-
-            if path_text in ignored:
-                continue
-
-            try:
-                data = json.loads(
-                    spine_file.read_text(
-                        encoding="utf-8"
-                    )
-                )
-            except (OSError, json.JSONDecodeError):
-                continue
-
-            found.append({
-                "name": data.get(
-                    "project",
-                    project_path.name
-                ),
-                "path": path_text,
-            })
-
-    return sorted(
-        found,
-        key=lambda project: (
-            project["name"].lower(),
-            project["path"].lower(),
-        )
-    )
-
-
 def add_project(path: Path) -> dict:
     path = Path(path).expanduser().resolve()
 
@@ -247,8 +154,6 @@ def add_project(path: Path) -> dict:
     save_projects(data)
 
     return project
-
-
 
 
 def ignore_project(path: Path) -> None:

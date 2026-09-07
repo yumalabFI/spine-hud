@@ -349,31 +349,36 @@ class SpineHUD(QMainWindow):
         self.project_menu_requested.emit()
 
     def closeEvent(self, event):
+        answer = QMessageBox.question(
+            self,
+            "Quit Spine?",
+            "Are you sure you want to quit Spine?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if answer != QMessageBox.Yes:
+            event.ignore()
+            return
+
         if hasattr(self, "project_settings"):
             self.project_settings.endGroup()
             self.project_settings.sync()
 
         geometry = self.geometry()
 
-        self.settings.setValue(
-            "x",
-            geometry.x()
-        )
-        self.settings.setValue(
-            "y",
-            geometry.y()
-        )
-        self.settings.setValue(
-            "width",
-            geometry.width()
-        )
-        self.settings.setValue(
-            "height",
-            geometry.height()
-        )
-
+        self.settings.setValue("x", geometry.x())
+        self.settings.setValue("y", geometry.y())
+        self.settings.setValue("width", geometry.width())
+        self.settings.setValue("height", geometry.height())
         self.settings.sync()
+
         event.accept()
+
+        app = QApplication.instance()
+
+        if app is not None:
+            app.quit()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

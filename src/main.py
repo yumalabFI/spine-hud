@@ -8,11 +8,11 @@ from PySide6.QtWidgets import QApplication
 try:
     from . import hud as hud_module
     from .project_selector import select_project
-    from .projects import set_last_opened
+    from .project_registry import set_last_opened
 except ImportError:
     import hud as hud_module
     from project_selector import select_project
-    from projects import set_last_opened
+    from project_registry import set_last_opened
 
 
 app = None

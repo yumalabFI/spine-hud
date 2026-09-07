@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import datetime, date, timedelta
 
-from PySide6.QtCore import Qt, QSettings
+from PySide6.QtCore import Qt, QSettings, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
@@ -13,26 +13,35 @@ from PySide6.QtWidgets import (
     QMenu,
     QListWidgetItem,
     QPushButton,
+    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
     QInputDialog,
     QMessageBox,
+    QSizePolicy,
 )
 
 try:
-    from .projects import (
-        ProjectRegistryError,
-        load_projects,
-        add_project,
-        rename_project,
-        remove_project,
+    from .project_registry import ProjectRegistryError
+    from .project_service import (
+        register_existing_project,
+        create_new_project,
+        initialize_existing_project,
+        load_project_registry,
+        scan_projects,
+        rename_existing_project,
+        remove_existing_project,
     )
 except ImportError:
-    from projects import (
-        ProjectRegistryError,
-        load_projects,
-        add_project,
-        rename_project,
-        remove_project,
+    from project_registry import ProjectRegistryError
+    from project_service import (
+        register_existing_project,
+        create_new_project,
+        initialize_existing_project,
+        load_project_registry,
+        scan_projects,
+        rename_existing_project,
+        remove_existing_project,
     )
 
 
@@ -118,8 +127,13 @@ class ProjectSelector(QDialog):
         super().__init__()
 
         self.selected_path = None
+        self._quit_confirmed = False
 
         self.setWindowTitle("Spine Projects")
+        self.setWindowFlag(
+            Qt.WindowStaysOnTopHint,
+            True
+        )
         self.setMinimumWidth(320)
 
         # Projektivalikko käyttää täsmälleen samaa
@@ -127,6 +141,12 @@ class ProjectSelector(QDialog):
         self.settings = QSettings(
             "YumaLab",
             "SpineHUD"
+        )
+
+        self.geometry_save_timer = QTimer(self)
+        self.geometry_save_timer.setSingleShot(True)
+        self.geometry_save_timer.timeout.connect(
+            self.save_window_geometry
         )
 
         x = self.settings.value("x")
@@ -169,7 +189,7 @@ class ProjectSelector(QDialog):
             }
 
             QListWidget::item {
-                padding: 10px 8px;
+                padding: 10px 72px 10px 8px;
                 min-height: 28px;
             }
 
@@ -183,19 +203,16 @@ class ProjectSelector(QDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(6)
 
-        title = QLabel("SELECT PROJECT")
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
-
         self.list = QListWidget()
+        self.list.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarAlwaysOff
+        )
         self.list.setContextMenuPolicy(
             Qt.CustomContextMenu
         )
         self.list.customContextMenuRequested.connect(
             self.open_context_menu
         )
-
-        layout.addWidget(self.list, 1)
 
         self.open_button = QPushButton("OPEN")
         self.open_button.setEnabled(False)
@@ -218,9 +235,32 @@ class ProjectSelector(QDialog):
             }
         """)
 
-        layout.addWidget(self.open_button)
+        self.open_button.setParent(
+            self.list.viewport()
+        )
+        self.open_button.setFixedSize(58, 24)
+        self.open_button.hide()
 
-        self.add_button = QPushButton("ADD PROJECT")
+        self.new_button = QPushButton("NEW PROJECT")
+        self.new_button.setStyleSheet("""
+            QPushButton {
+                background: #25282d;
+                color: #e8e9eb;
+                border: none;
+                border-radius: 4px;
+                padding: 7px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background: #30343a;
+                color: #ffffff;
+            }
+        """)
+
+        layout.addWidget(self.new_button)
+
+        self.add_button = QPushButton("ADD EXISTING PROJECT")
         self.add_button.setStyleSheet("""
             QPushButton {
                 background: #202329;
@@ -237,6 +277,38 @@ class ProjectSelector(QDialog):
         """)
 
         layout.addWidget(self.add_button)
+
+        self.scan_button = QPushButton("SCAN PROJECTS")
+        self.scan_button.setStyleSheet("""
+            QPushButton {
+                background: #202329;
+                color: #aeb4bd;
+                border: none;
+                border-radius: 4px;
+                padding: 7px;
+            }
+
+            QPushButton:hover {
+                background: #2b3037;
+                color: #ffffff;
+            }
+        """)
+
+        layout.addWidget(self.scan_button)
+
+        projects_label = QLabel("PROJECTS")
+        projects_label.setStyleSheet("""
+            QLabel {
+                color: #686e77;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 8px 4px 3px 4px;
+            }
+        """)
+
+        layout.addWidget(projects_label)
+
+        layout.addWidget(self.list, 1)
 
         self.last_project_checkbox = QCheckBox(
             "Open last project on startup"
@@ -302,6 +374,10 @@ class ProjectSelector(QDialog):
             self.on_selection_changed
         )
 
+        self.list.verticalScrollBar().valueChanged.connect(
+            self.position_open_button
+        )
+
         self.list.itemDoubleClicked.connect(
             self.open_item
         )
@@ -310,8 +386,16 @@ class ProjectSelector(QDialog):
             self.open_selected
         )
 
+        self.new_button.clicked.connect(
+            self.new_project
+        )
+
         self.add_button.clicked.connect(
             self.add_project
+        )
+
+        self.scan_button.clicked.connect(
+            self.scan_projects
         )
 
         if self.list.count():
@@ -328,7 +412,7 @@ class ProjectSelector(QDialog):
         self.settings.sync()
 
     def load_registry(self):
-        data = load_projects()
+        data = load_project_registry()
 
         last_opened = data.get("last_opened")
 
@@ -394,60 +478,376 @@ class ProjectSelector(QDialog):
                 is_last
             )
 
+            item.setData(
+                Qt.UserRole + 2,
+                "registered"
+            )
+
             self.list.addItem(item)
 
             if is_last:
                 self.list.setCurrentItem(item)
 
-    def add_project(self):
-        # Älä anna ProjectSelectoria parentiksi.
-        # Muuten Qt voi periä Spine-valikon geometrian
-        # Linuxin kansiovalitsimelle.
-        dialog = QFileDialog(
+    def new_project(self):
+        base_directory = QFileDialog.getExistingDirectory(
             None,
-            "Add Spine project"
+            "Choose location for new Spine project"
         )
 
-        dialog.setFileMode(
-            QFileDialog.Directory
-        )
-
-        dialog.setOption(
-            QFileDialog.ShowDirsOnly,
-            True
-        )
-
-        if dialog.exec() != QFileDialog.Accepted:
+        if not base_directory:
             return
 
-        selected = dialog.selectedFiles()
+        name, accepted = QInputDialog.getText(
+            self,
+            "New Spine project",
+            "Project name:"
+        )
 
-        if not selected:
+        if not accepted:
             return
 
-        directory = selected[0]
+        name = name.strip()
+
+        if not name:
+            return
+
+        invalid_chars = '<>:"/\\|?*'
+
+        if (
+            name in (".", "..")
+            or any(char in name for char in invalid_chars)
+        ):
+            QMessageBox.warning(
+                self,
+                "Invalid project name",
+                "Choose a project name without path "
+                "separators or reserved characters."
+            )
+            return
+
+        project_path = (
+            Path(base_directory) / name
+        ).resolve()
+
+        try:
+            project = create_new_project(project_path)
+        except (FileExistsError, SystemExit, ProjectRegistryError) as exc:
+            QMessageBox.warning(
+                self,
+                "Project creation failed",
+                f"Could not create Spine project:\n"
+                f"{project_path}\n\n{exc}"
+            )
+            return
+
+        self.load_registry_refresh()
+
+        for row in range(self.list.count()):
+            item = self.list.item(row)
+
+            if item.data(Qt.UserRole) == str(project_path):
+                self.list.setCurrentItem(item)
+                break
+
+        QMessageBox.information(
+            self,
+            "Project created",
+            f"Created: {project['name']}"
+        )
+
+        self.open_selected()
+
+    def add_project(self):
+        directory = QFileDialog.getExistingDirectory(
+            None,
+            "Choose existing project"
+        )
 
         if not directory:
             return
 
         path = Path(directory).resolve()
 
-        if not (path / "spine.json").exists():
+        try:
+            if (path / "spine.json").exists():
+                project = register_existing_project(path)
+            else:
+                answer = QMessageBox.question(
+                    self,
+                    "Make Spine project?",
+                    "This project does not contain spine.json.\n\n"
+                    "Make this existing project a Spine project?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
+
+                if answer != QMessageBox.Yes:
+                    return
+
+                project = initialize_existing_project(path)
+
+        except (SystemExit, ProjectRegistryError) as exc:
             QMessageBox.warning(
                 self,
-                "Not a Spine project",
-                "The selected folder does not contain "
-                "spine.json."
+                "Add project failed",
+                str(exc)
             )
             return
 
+        self.load_registry_refresh()
+
+        for row in range(self.list.count()):
+            item = self.list.item(row)
+
+            if item.data(Qt.UserRole) == str(path):
+                self.list.setCurrentItem(item)
+                break
+
+        QMessageBox.information(
+            self,
+            "Project added",
+            f"Added: {project['name']}"
+        )
+
+    def scan_projects(self):
+        roots = [
+            Path.home(),
+            Path.home() / "VerkkoJako",
+        ]
+
+        found = scan_projects(
+            roots=roots,
+            max_depth=5
+        )
+
+        # Poista mahdolliset vanhat FOUND-rivit.
+        for row in range(
+            self.list.count() - 1,
+            -1,
+            -1
+        ):
+            item = self.list.item(row)
+
+            if item.data(Qt.UserRole + 2) in (
+                "found",
+                "found_header"
+            ):
+                self.list.takeItem(row)
+
+        if not found:
+            QMessageBox.information(
+                self,
+                "Scan projects",
+                "No new projects found."
+            )
+            return
+
+        header = QListWidgetItem(
+            "FOUND PROJECTS"
+        )
+        header.setData(
+            Qt.UserRole + 2,
+            "found_header"
+        )
+        header.setFlags(Qt.NoItemFlags)
+        header.setForeground(
+            QColor("#686e77")
+        )
+
+        self.list.addItem(header)
+
+        for project in found:
+            self.add_scan_result(project)
+
+        self.open_button.hide()
+
+    def add_scan_result(self, project):
+        item = QListWidgetItem()
+
+        item.setData(
+            Qt.UserRole,
+            project["path"]
+        )
+        item.setData(
+            Qt.UserRole + 2,
+            "found"
+        )
+
+        item.setSizeHint(
+            self.list.sizeHintForIndex(
+                self.list.model().index(
+                    max(0, self.list.count() - 1),
+                    0
+                )
+            )
+        )
+
+        row = QWidget()
+
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(
+            8,
+            5,
+            8,
+            5
+        )
+        layout.setSpacing(8)
+
+        project_path = Path(project["path"])
+
         try:
-            project = add_project(path)
+            display_path = "~/" + str(
+                project_path.relative_to(
+                    Path.home()
+                )
+            )
+        except ValueError:
+            display_path = str(project_path)
+
+        if len(display_path) > 38:
+            display_path = (
+                display_path[:16]
+                + "..."
+                + display_path[-19:]
+            )
+
+        git_status = project.get(
+            "git_status",
+            "GIT"
+        )
+
+        last_commit = project.get(
+            "last_commit"
+        )
+
+        if last_commit:
+            metadata = (
+                f"GIT · {git_status} · "
+                f"last commit {last_commit}"
+            )
+        else:
+            metadata = (
+                f"GIT · {git_status}"
+            )
+
+        label = QLabel(
+            f"<b>{project['name']}</b><br>"
+            f"<span style='color:#aeb4bd;'>"
+            f"{metadata}</span><br>"
+            f"<span style='color:#686e77;'>"
+            f"{display_path}</span>"
+        )
+        label.setToolTip(
+            project["path"]
+        )
+        label.setMinimumWidth(0)
+        label.setSizePolicy(
+            QSizePolicy.Ignored,
+            QSizePolicy.Preferred
+        )
+        label.setStyleSheet("""
+            QLabel {
+                color: #aeb4bd;
+                font-size: 10px;
+            }
+        """)
+
+        button = QPushButton(
+            "ADD"
+            if project["has_spine"]
+            else "MAKE SPINE PROJECT"
+        )
+
+        button.setFixedSize(148, 28)
+
+        button.setStyleSheet("""
+            QPushButton {
+                background: #25282d;
+                color: #e8e9eb;
+                border: none;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background: #30343a;
+                color: #ffffff;
+            }
+        """)
+
+        if project["has_spine"]:
+            button.clicked.connect(
+                lambda checked=False, path=project_path:
+                self.add_scanned_project(path)
+            )
+        else:
+            button.clicked.connect(
+                lambda checked=False, path=project_path:
+                self.initialize_scanned_project(path)
+            )
+
+        layout.addWidget(label, 1)
+        layout.addWidget(button)
+
+        row.setMinimumHeight(62)
+
+        item.setSizeHint(
+            row.sizeHint()
+        )
+
+        self.list.addItem(item)
+        self.list.setItemWidget(
+            item,
+            row
+        )
+
+    def add_scanned_project(self, path):
+        try:
+            project = register_existing_project(path)
         except ProjectRegistryError as exc:
             QMessageBox.warning(
                 self,
                 "Add project failed",
                 str(exc)
+            )
+            return
+
+        self.load_registry_refresh()
+
+        for row in range(self.list.count()):
+            item = self.list.item(row)
+
+            if item.data(Qt.UserRole) == str(path):
+                self.list.setCurrentItem(item)
+                break
+
+        QMessageBox.information(
+            self,
+            "Project added",
+            f"Added: {project['name']}"
+        )
+
+    def initialize_scanned_project(self, path):
+        answer = QMessageBox.question(
+            self,
+            "Make Spine project?",
+            f"Make Spine project in this folder?\n\n{path}",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if answer != QMessageBox.Yes:
+            return
+
+        try:
+            project = initialize_existing_project(path)
+        except (SystemExit, ProjectRegistryError) as exc:
+            QMessageBox.warning(
+                self,
+                "Make Spine project failed",
+                f"Could not make Spine project in:\n"
+                f"{path}\n\n{exc}"
             )
             return
 
@@ -507,7 +907,7 @@ class ProjectSelector(QDialog):
         current_name = path.name
 
         # Käytä rekisterissä olevaa nimeä.
-        data = load_projects()
+        data = load_project_registry()
 
         for project in data.get("projects", []):
             if project.get("path") == str(path):
@@ -533,7 +933,7 @@ class ProjectSelector(QDialog):
             return
 
         try:
-            rename_project(
+            rename_existing_project(
                 path,
                 name
             )
@@ -573,7 +973,7 @@ class ProjectSelector(QDialog):
             return
 
         try:
-            remove_project(path)
+            remove_existing_project(path)
         except ProjectRegistryError as exc:
             QMessageBox.warning(
                 self,
@@ -609,25 +1009,68 @@ class ProjectSelector(QDialog):
                     self.list.setCurrentItem(item)
                     break
 
+    def save_window_geometry(self):
+        geometry = self.geometry()
+
+        self.settings.setValue(
+            "x",
+            geometry.x()
+        )
+        self.settings.setValue(
+            "y",
+            geometry.y()
+        )
+        self.settings.setValue(
+            "width",
+            geometry.width()
+        )
+        self.settings.setValue(
+            "height",
+            geometry.height()
+        )
+
+        self.settings.sync()
+
     def confirm_quit(self):
         answer = QMessageBox.question(
             self,
-            "Quit Spine",
-            "Quit Spine completely?",
+            "Quit Spine?",
+            "Are you sure you want to quit Spine?",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
 
-        if answer == QMessageBox.Yes:
-            self.accept()
-            app = QApplication.instance()
-            if app is not None:
-                app.quit()
+        if answer != QMessageBox.Yes:
+            return
+
+        self._quit_confirmed = True
+
+        app = QApplication.instance()
+
+        if app is not None:
+            app.quit()
+
+    def schedule_geometry_save(self):
+        if hasattr(self, "geometry_save_timer"):
+            self.geometry_save_timer.start(200)
+
+    def moveEvent(self, event):
+        super().moveEvent(event)
+        self.schedule_geometry_save()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.schedule_geometry_save()
 
     def closeEvent(self, event):
-        # Projektivalikon X ei sammuta Spineä.
-        # Käytä erillistä QUIT SPINE -painiketta.
+        if self._quit_confirmed:
+            self.save_window_geometry()
+            event.accept()
+            return
+
         event.ignore()
+        self.save_window_geometry()
+        self.confirm_quit()
 
     def keyPressEvent(self, event):
         if event.key() in (
@@ -645,9 +1088,42 @@ class ProjectSelector(QDialog):
         super().keyPressEvent(event)
 
     def on_selection_changed(self, current, previous):
+        has_selection = current is not None
+
         self.open_button.setEnabled(
-            current is not None
+            has_selection
         )
+
+        self.position_open_button()
+
+    def position_open_button(self):
+        item = self.list.currentItem()
+
+        if (
+            item is None
+            or item.data(Qt.UserRole + 2) != "registered"
+        ):
+            self.open_button.hide()
+            return
+
+        rect = self.list.visualItemRect(item)
+
+        if not rect.isValid():
+            self.open_button.hide()
+            return
+
+        width = self.open_button.width()
+        height = self.open_button.height()
+
+        x = rect.right() - width - 8
+        y = rect.top() + max(
+            0,
+            (rect.height() - height) // 2
+        )
+
+        self.open_button.move(x, y)
+        self.open_button.show()
+        self.open_button.raise_()
 
     def open_selected(self):
         item = self.list.currentItem()
@@ -658,12 +1134,16 @@ class ProjectSelector(QDialog):
         self.open_item(item)
 
     def open_item(self, item):
+        if item.data(Qt.UserRole + 2) != "registered":
+            return
+
         path = item.data(Qt.UserRole)
 
         if not path:
             return
 
         self.selected_path = Path(path)
+        self.save_window_geometry()
         self.accept()
 
 
