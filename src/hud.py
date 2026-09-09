@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, Signal
+from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, Signal, QObject, QRunnable, QThreadPool
 from PySide6.QtGui import QColor
 
 try:
@@ -95,6 +95,28 @@ except ImportError:
 
 def git_changed_files():
     return get_changed_files(PROJECT)
+
+
+class GitRefreshSignals(QObject):
+    finished = Signal(object, object)
+    failed = Signal(str)
+
+
+class GitRefreshWorker(QRunnable):
+    def __init__(self, project):
+        super().__init__()
+        self.project = project
+        self.signals = GitRefreshSignals()
+
+    def run(self):
+        try:
+            changed_files = get_changed_files(self.project)
+            commit = get_last_commit(self.project)
+        except Exception as exc:
+            self.signals.failed.emit(str(exc))
+            return
+
+        self.signals.finished.emit(changed_files, commit)
 
 
 def node_git_count(node, changed_files):
@@ -366,11 +388,15 @@ class SpineHUD(QMainWindow):
 
         self.spine_timer = QTimer(self)
         self.spine_timer.timeout.connect(self.check_spine_file)
-        self.spine_timer.start(500)
+        self.spine_timer.start(1500)
+
+        self._git_update_busy = False
+        self._git_worker = None
+        self.git_thread_pool = QThreadPool.globalInstance()
 
         self.git_timer = QTimer(self)
         self.git_timer.timeout.connect(self.update_git)
-        self.git_timer.start(1000)
+        self.git_timer.start(5000)
 
         self.arrow_timer = QTimer(self)
         self.arrow_timer.timeout.connect(self.animate_active_arrow)
@@ -1101,7 +1127,6 @@ class SpineHUD(QMainWindow):
             )
 
         self.update_columns()
-        self.update_git()
 
         # Palauta sama valittu tehtävä reloadin jälkeen.
         if selected_name:
@@ -1207,9 +1232,30 @@ class SpineHUD(QMainWindow):
                 item.setText(0, f"➜  {name}")
 
     def update_git(self):
-        changed_files = git_changed_files()
+        if self._git_update_busy:
+            return
 
-        commit = get_last_commit(PROJECT)
+        self._git_update_busy = True
+
+        worker = GitRefreshWorker(PROJECT)
+        self._git_worker = worker
+
+        worker.signals.finished.connect(
+            self.apply_git_update
+        )
+        worker.signals.failed.connect(
+            self.git_update_failed
+        )
+
+        self.git_thread_pool.start(worker)
+
+    def git_update_failed(self, _message):
+        self._git_update_busy = False
+        self._git_worker = None
+
+    def apply_git_update(self, changed_files, commit):
+        self._git_update_busy = False
+        self._git_worker = None
 
         commit_files = (
             commit.get("files", [])

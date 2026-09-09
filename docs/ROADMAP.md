@@ -1,4 +1,4 @@
-# spine-hud Roadmap
+# spine-hud DEV Roadmap
 
 > Generated automatically from `spine.json`.
 
@@ -25,6 +25,12 @@
     - **Release**
       - [x] Release packaging
       - [x] GitHub Release
+      - [x] v0.2.0-alpha.2 runtime isolation hotfix
+      - **v0.2.0-alpha.3 performance hotfix**
+        - [ ] Async Git refresh and slower polling — active
+        - [ ] Fedora responsiveness test
+        - [ ] Ubuntu responsiveness test
+        - [ ] Two-machine shared project smoke test
     - **Project planning**
       - [ ] Brainstorm workflow
       - [ ] Import plan into Spine
@@ -35,3 +41,32 @@
   - **Later**
     - [ ] Windows build
     - [ ] Installer
+    - **Ideas**
+      - **Shared projects**
+        - [ ] Open Spine projects from mounted network drives
+        - [ ] Live refresh when shared spine.json changes
+        - [ ] Safe multi-machine editing
+        - [ ] Single-writer protection for conflicting edits
+      - **Team / Collaboration (1.0 idea)**
+        - [ ] Branch reservation button
+        - [ ] Task or branch owner
+        - [ ] Multiple branches reserved by different developers
+        - [ ] Show who is working on each branch
+        - [ ] Shared file overlap warning
+        - [ ] Detect task paths from Git changes during work
+        - [ ] File lock when developers touch the same file
+        - [ ] Live developer presence
+        - [ ] Collision warning
+        - [ ] Join the same task
+        - [ ] Multiple developers per task
+      - **History / Activity**
+        - [ ] Local project history independent of Git
+        - [ ] Project tree snapshots
+        - [ ] Activity timeline with timestamps
+        - [ ] Record task changes as activity events
+        - [ ] Record Git commits and pushes as activity events
+      - **Automation / Integrations**
+        - [ ] Automatic activity detection
+        - [ ] Git ahead / behind status
+        - [ ] GitHub integration
+        - [ ] CI status
