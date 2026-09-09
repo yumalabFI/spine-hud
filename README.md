@@ -189,6 +189,16 @@ Commercial use requires a separate commercial license.
 
 See the license file for exact terms.
 
+## Spine project format
+
+The public v0.2 Spine project format is documented here:
+
+- [`docs/SPINE_FORMAT.md`](docs/SPINE_FORMAT.md)
+- [`examples/spine.json`](examples/spine.json)
+
+Use these when creating integrations or generating a Spine project file.
+Do not infer the schema only from the rendered roadmap.
+
 ## Development roadmap
 
 Spine HUD uses Spine itself to track development.

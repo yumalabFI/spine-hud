@@ -1,0 +1,49 @@
+{
+  "project": "example-project",
+  "tree": [
+    {
+      "id": "roadmap",
+      "name": "Roadmap",
+      "order": 1,
+      "paths": [],
+      "status": "planned",
+      "children": [
+        {
+          "id": "first-release",
+          "name": "First release",
+          "order": 1,
+          "paths": [],
+          "status": "done",
+          "children": [
+            {
+              "id": "initial-hud",
+              "name": "Initial HUD",
+              "order": 1,
+              "paths": [
+                "src/hud.py"
+              ],
+              "status": "done",
+              "children": []
+            }
+          ]
+        },
+        {
+          "id": "blocked-example",
+          "name": "Blocked example",
+          "order": 2,
+          "paths": [],
+          "status": "blocked",
+          "children": []
+        },
+        {
+          "id": "new-idea",
+          "name": "New idea",
+          "order": 3,
+          "paths": [],
+          "status": "planned",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
