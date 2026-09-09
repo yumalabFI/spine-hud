@@ -4,57 +4,38 @@ Spine HUD is a lightweight visual project roadmap and task HUD for developers.
 
 It keeps the project structure, current work and Git activity visible while you work. The same `spine.json` state can be controlled from the HUD or from the `spine` command line.
 
-> Current release: Ubuntu v0.1.0-alpha
+> Current test release: v0.2.0-alpha.1
 
-![Spine HUD screenshot](docs/images/spine-hud.png)
+![Spine HUD v0.2](docs/images/spine-hud-v0.2.png)
 
 
 ## Installation
 
-Spine HUD currently targets Ubuntu.
+Spine HUD v0.2 test releases use a user-local installation.
 
-Clone the repository and enter the project directory:
+Clone or extract the release, enter its directory, and run:
 
-    git clone https://github.com/YumaLabFI/spine-hud.git
-    cd spine-hud
+    ./packaging/install-v0.2-test.sh
 
-Create a Python virtual environment:
+Then launch **Spine HUD v0.2 Test** from the desktop application menu.
 
-    python3 -m venv .venv
+The desktop launcher uses `Terminal=false`, so Spine HUD starts without opening a terminal window.
 
-Activate it:
+The v0.2 test installation is isolated from the existing v0.1 PRODUCT installation.
 
-    source .venv/bin/activate
+Installed locations:
 
-Install the dependencies:
+    ~/.local/share/spine-hud-v0.2-test
+    ~/.local/bin/spine-hud-v0.2-test
+    ~/.local/share/applications/spine-hud-v0.2-test.desktop
 
-    pip install -r requirements.txt
+Runtime log:
 
-Create the `spine` command inside the virtual environment:
+    ~/.local/state/spine-hud-v0.2-test/spine.log
 
-    cat > .venv/bin/spine <<EOF
-    #!/bin/bash
-    SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-    exec "\$SCRIPT_DIR/python" "$(pwd)/src/cli.py" "\$@"
-    EOF
+Remove only the v0.2 test installation with:
 
-    chmod +x .venv/bin/spine
-
-Run the HUD:
-
-    .venv/bin/python src/main.py
-
-For a new project, initialize Spine with:
-
-    .venv/bin/spine init /path/to/project
-
-Then enter that project and verify its roadmap:
-
-    cd /path/to/project
-    /path/to/spine-hud/.venv/bin/spine status
-
-The Spine HUD repository itself does not need to be a Spine-managed project.
-A system-wide installer is planned for a later release.
+    ./packaging/uninstall-v0.2-test.sh
 
 ## Project tree
 
@@ -176,13 +157,17 @@ See `docs/AI_ASSISTANT.md` for the dedicated AI Assistant Guide.
 
 ## Run the HUD
 
-From the Spine HUD repository:
+Installed release:
 
-    .venv/bin/python src/main.py
+Launch **Spine HUD v0.2 Test** from the desktop application menu.
 
-The startup project selector lets you open registered Spine projects, add projects and reopen the last project automatically if enabled.
+Development checkout:
 
-Closing the HUD returns to the project selector. Use `QUIT SPINE` to exit Spine completely.
+    SPINE_ENV=dev QT_QPA_PLATFORM=xcb PYTHONPATH=src .venv/bin/python src/main.py
+
+The startup project selector opens registered Spine projects and can reopen the last project automatically.
+
+Closing the HUD returns to the project selector. Use `QUIT SPINE` to exit completely.
 
 Only one Spine HUD instance can run at a time.
 
@@ -203,6 +188,28 @@ Spine HUD uses PolyForm Noncommercial for noncommercial use.
 Commercial use requires a separate commercial license.
 
 See the license file for exact terms.
+
+## Development roadmap
+
+Spine HUD uses Spine itself to track development.
+
+The current public build tree is available in:
+
+[`docs/ROADMAP.md`](docs/ROADMAP.md)
+
+The roadmap shows completed, active, blocked and planned work directly from the Spine project state.
+
+## Screenshots
+
+### v0.2 HUD
+
+![Spine HUD v0.2](docs/images/spine-hud-v0.2.png)
+
+### Additional v0.2 views
+
+![Spine HUD v0.2 view 2](docs/images/spine-hud-v0.2-2.png)
+
+![Spine HUD v0.2 view 3](docs/images/spine-hud-v0.2-3.png)
 
 ## Status
 

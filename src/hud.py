@@ -3,6 +3,35 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QSettings, QEvent, Signal
 from PySide6.QtGui import QColor
+
+try:
+    from .window_behavior import (
+        apply_hud_compact_mode,
+        apply_window_behavior,
+        read_compact_mode,
+        save_compact_mode,
+    )
+except ImportError:
+    from window_behavior import (
+        apply_hud_compact_mode,
+        apply_window_behavior,
+        read_compact_mode,
+        save_compact_mode,
+    )
+
+try:
+    from .runtime_env import (
+        IS_DEV,
+        SETTINGS_APP,
+        WINDOW_SUFFIX,
+    )
+except ImportError:
+    from runtime_env import (
+        IS_DEV,
+        SETTINGS_APP,
+        WINDOW_SUFFIX,
+    )
+
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -11,6 +40,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QCheckBox,
     QMenu,
     QInputDialog,
     QMessageBox,
@@ -104,12 +134,12 @@ class SpineHUD(QMainWindow):
 
         self.settings = QSettings(
             "YumaLab",
-            "SpineHUD"
+            SETTINGS_APP
         )
 
         self.project_settings = QSettings(
             "YumaLab",
-            "SpineHUD",
+            SETTINGS_APP,
         )
 
         self.project_settings.beginGroup(
@@ -120,14 +150,14 @@ class SpineHUD(QMainWindow):
             project_key.replace("/", "_")
         )
 
-        self.setWindowTitle("Spine HUD")
+        self.setWindowTitle("Spine HUD" + WINDOW_SUFFIX)
 
         self.setMinimumSize(170, 300)
         self.resize(250, 800)
 
-        self.setWindowFlags(
-            Qt.Window
-            | Qt.WindowStaysOnTopHint
+        apply_window_behavior(
+            self,
+            self.settings,
         )
 
         root = QWidget()
@@ -139,15 +169,26 @@ class SpineHUD(QMainWindow):
         """)
 
         outer = QVBoxLayout(root)
+        self.outer_layout = outer
         outer.setContentsMargins(7, 7, 7, 5)
         outer.setSpacing(4)
 
         # TOP BAR
         self.topbar = QWidget()
+
+        if IS_DEV:
+            self.topbar.setStyleSheet("""
+                QWidget {
+                    background: #6b5717;
+                    border: 1px solid #f0c84b;
+                    border-radius: 4px;
+                }
+            """)
+
         top = QHBoxLayout(self.topbar)
         top.setContentsMargins(0, 0, 0, 0)
 
-        title = QLabel("SPINE HUD")
+        title = QLabel("SPINE HUD — DEV" if IS_DEV else "SPINE HUD")
         title.setStyleSheet("""
             font-size: 12px;
             font-weight: bold;
@@ -263,7 +304,40 @@ class SpineHUD(QMainWindow):
 
         # RESIZE GRIP
         bottom = QHBoxLayout()
+        self.bottom_layout = bottom
         bottom.setContentsMargins(0, 0, 0, 0)
+
+        self.compact_checkbox = QCheckBox(
+            "Compact"
+        )
+
+        self.compact_checkbox.setChecked(
+            read_compact_mode(
+                self.settings
+            )
+        )
+
+        self.compact_checkbox.setStyleSheet("""
+            QCheckBox {
+                color: #686e77;
+                background: transparent;
+                border: none;
+                padding: 0px 3px;
+                font-size: 9px;
+            }
+
+            QCheckBox:hover {
+                color: #e8e9eb;
+            }
+        """)
+
+        self.compact_checkbox.stateChanged.connect(
+            self.change_compact_mode
+        )
+
+        bottom.addWidget(
+            self.compact_checkbox
+        )
 
         bottom.addStretch()
 
@@ -280,6 +354,11 @@ class SpineHUD(QMainWindow):
         outer.addLayout(bottom)
 
         self.setCentralWidget(root)
+
+        apply_hud_compact_mode(
+            self,
+            read_compact_mode(self.settings),
+        )
 
         self.restore_window_geometry()
         self.reload_tree()
@@ -403,6 +482,22 @@ class SpineHUD(QMainWindow):
     def mouseReleaseEvent(self, event):
         self.drag_offset = None
         event.accept()
+
+    def change_compact_mode(self, state):
+        enabled = bool(state)
+
+        save_compact_mode(
+            self.settings,
+            enabled,
+        )
+
+        apply_hud_compact_mode(
+            self,
+            enabled,
+        )
+
+        self.update_columns()
+
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

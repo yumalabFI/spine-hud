@@ -3,8 +3,12 @@ import os
 import tempfile
 from pathlib import Path
 
+try:
+    from .runtime_env import CONFIG_DIR
+except ImportError:
+    from runtime_env import CONFIG_DIR
 
-CONFIG_DIR = Path.home() / ".config" / "spine"
+
 PROJECTS_FILE = CONFIG_DIR / "projects.json"
 
 

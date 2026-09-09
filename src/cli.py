@@ -8,6 +8,7 @@ from engine import (
     get_last_commit,
     path_matches,
     task_git_state,
+    calculated_status,
 )
 
 from storage import (
@@ -551,10 +552,7 @@ def command_status(data):
 
     def show(nodes, depth=0):
         for task in nodes:
-            status = task.get(
-                "status",
-                "planned"
-            )
+            status = calculated_status(task)
 
             icon = {
                 "done": "✓",

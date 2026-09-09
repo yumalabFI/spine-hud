@@ -3,6 +3,42 @@ from datetime import datetime, date, timedelta
 
 from PySide6.QtCore import Qt, QSettings, QTimer
 from PySide6.QtGui import QColor
+
+try:
+    from .window_behavior import (
+        OPACITY_MAX,
+        OPACITY_MIN,
+        apply_opacity,
+        apply_window_behavior,
+        read_compact_mode,
+        read_opacity,
+        save_compact_mode,
+        save_opacity,
+    )
+except ImportError:
+    from window_behavior import (
+        OPACITY_MAX,
+        OPACITY_MIN,
+        apply_opacity,
+        apply_window_behavior,
+        read_compact_mode,
+        read_opacity,
+        save_compact_mode,
+        save_opacity,
+    )
+
+try:
+    from .runtime_env import (
+        IS_DEV,
+        SETTINGS_APP,
+        WINDOW_SUFFIX,
+    )
+except ImportError:
+    from runtime_env import (
+        IS_DEV,
+        SETTINGS_APP,
+        WINDOW_SUFFIX,
+    )
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -19,6 +55,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QMessageBox,
     QSizePolicy,
+    QSlider,
 )
 
 try:
@@ -129,18 +166,19 @@ class ProjectSelector(QDialog):
         self.selected_path = None
         self._quit_confirmed = False
 
-        self.setWindowTitle("Spine Projects")
-        self.setWindowFlag(
-            Qt.WindowStaysOnTopHint,
-            True
-        )
+        self.setWindowTitle("Spine Projects" + WINDOW_SUFFIX)
         self.setMinimumWidth(320)
 
         # Projektivalikko käyttää täsmälleen samaa
         # kokoa ja sijaintia kuin Spine HUD.
         self.settings = QSettings(
             "YumaLab",
-            "SpineHUD"
+            SETTINGS_APP
+        )
+
+        apply_window_behavior(
+            self,
+            self.settings,
         )
 
         self.geometry_save_timer = QTimer(self)
@@ -167,36 +205,37 @@ class ProjectSelector(QDialog):
         else:
             self.resize(360, 420)
 
-        self.setStyleSheet("""
-            QDialog {
+        self.setStyleSheet(f"""
+            QDialog {{
                 background: #15171a;
                 color: #e8e9eb;
-            }
+                border: none;
+            }}
 
-            QLabel {
+            QLabel {{
                 color: #aeb4bd;
                 font-size: 11px;
                 font-weight: bold;
                 padding: 6px;
-            }
+            }}
 
-            QListWidget {
+            QListWidget {{
                 background: #15171a;
                 color: #e8e9eb;
                 border: none;
                 font-size: 12px;
                 outline: none;
-            }
+            }}
 
-            QListWidget::item {
+            QListWidget::item {{
                 padding: 10px 72px 10px 8px;
                 min-height: 28px;
-            }
+            }}
 
-            QListWidget::item:selected {
+            QListWidget::item:selected {{
                 background: #252a31;
                 color: #ffffff;
-            }
+            }}
         """)
 
         layout = QVBoxLayout(self)
@@ -341,6 +380,70 @@ class ProjectSelector(QDialog):
             self.last_project_checkbox
         )
 
+        self.compact_checkbox = QCheckBox(
+            "Compact mode"
+        )
+
+        self.compact_checkbox.setChecked(
+            read_compact_mode(
+                self.settings
+            )
+        )
+
+        self.compact_checkbox.setStyleSheet("""
+            QCheckBox {
+                color: #aeb4bd;
+                padding: 6px;
+            }
+
+            QCheckBox:hover {
+                color: #ffffff;
+            }
+        """)
+
+        self.compact_checkbox.stateChanged.connect(
+            self.save_compact_preference
+        )
+
+        layout.addWidget(
+            self.compact_checkbox
+        )
+
+        self.opacity_label = QLabel()
+
+        self.opacity_slider = QSlider(
+            Qt.Horizontal
+        )
+        self.opacity_slider.setRange(
+            OPACITY_MIN,
+            OPACITY_MAX
+        )
+        self.opacity_slider.setSingleStep(5)
+        self.opacity_slider.setPageStep(10)
+
+        opacity = read_opacity(
+            self.settings
+        )
+
+        self.opacity_slider.setValue(
+            opacity
+        )
+
+        self.update_opacity_label(
+            opacity
+        )
+
+        self.opacity_slider.valueChanged.connect(
+            self.change_opacity
+        )
+
+        layout.addWidget(
+            self.opacity_label
+        )
+        layout.addWidget(
+            self.opacity_slider
+        )
+
         self.quit_button = QPushButton(
             "QUIT SPINE"
         )
@@ -410,6 +513,32 @@ class ProjectSelector(QDialog):
             bool(state)
         )
         self.settings.sync()
+
+    def save_compact_preference(self, state):
+        save_compact_mode(
+            self.settings,
+            bool(state),
+        )
+
+    def update_opacity_label(self, value):
+        self.opacity_label.setText(
+            f"Opacity: {int(value)}%"
+        )
+
+    def change_opacity(self, value):
+        value = save_opacity(
+            self.settings,
+            value,
+        )
+
+        self.update_opacity_label(
+            value
+        )
+
+        apply_opacity(
+            self,
+            value,
+        )
 
     def load_registry(self):
         data = load_project_registry()

@@ -6,6 +6,17 @@ from PySide6.QtCore import QLockFile, QTimer, QSettings
 from PySide6.QtWidgets import QApplication
 
 try:
+    from .runtime_env import (
+        LOCK_NAME,
+        SETTINGS_APP,
+    )
+except ImportError:
+    from runtime_env import (
+        LOCK_NAME,
+        SETTINGS_APP,
+    )
+
+try:
     from . import hud as hud_module
     from .project_selector import select_project
     from .project_registry import set_last_opened
@@ -32,7 +43,7 @@ def open_project(project):
 
     settings = QSettings(
         "YumaLab",
-        "SpineHUD"
+        SETTINGS_APP
     )
 
     settings.setValue(
@@ -64,7 +75,7 @@ def show_project_menu(use_last_project=True):
     if use_last_project:
         settings = QSettings(
             "YumaLab",
-            "SpineHUD"
+            SETTINGS_APP
         )
 
         open_last = settings.value(
@@ -118,7 +129,7 @@ def main():
 
     lock_path = (
         Path(tempfile.gettempdir())
-        / "spine-hud.lock"
+        / LOCK_NAME
     )
 
     lock = QLockFile(str(lock_path))
