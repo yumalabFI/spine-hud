@@ -133,6 +133,9 @@ def main():
     )
 
     lock = QLockFile(str(lock_path))
+    # Recover automatically from stale lock files left by a dead process.
+    lock.setStaleLockTime(5000)
+    lock.removeStaleLockFile()
 
     if not lock.tryLock(100):
         return 0

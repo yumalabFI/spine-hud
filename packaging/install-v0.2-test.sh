@@ -51,7 +51,7 @@ LOG_FILE="$STATE_DIR/spine.log"
 
 mkdir -p "$STATE_DIR"
 
-export SPINE_ENV=dev
+export SPINE_ENV=release
 export PYTHONPATH="$APP_DIR/src"
 
 # Fedora/Wayland-testissä xcb/XWayland on ollut vakaa polku.

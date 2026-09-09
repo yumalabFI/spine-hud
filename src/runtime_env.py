@@ -27,3 +27,14 @@ LOCK_NAME = (
 )
 
 WINDOW_SUFFIX = " [DEV]" if IS_DEV else ""
+
+
+# SPINE_V02_RELEASE_RUNTIME
+# Installed v0.2 releases must not share DEV settings or the DEV lock.
+_RUNTIME_KIND = os.environ.get("SPINE_ENV", "").strip().lower()
+IS_RELEASE = _RUNTIME_KIND in {"release", "test"}
+
+if IS_RELEASE:
+    IS_DEV = False
+    SETTINGS_APP = "SpineHUD-v0.2"
+    LOCK_NAME = "spine-hud-v0.2.lock"

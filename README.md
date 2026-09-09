@@ -4,7 +4,7 @@ Spine HUD is a lightweight visual project roadmap and task HUD for developers.
 
 It keeps the project structure, current work and Git activity visible while you work. The same `spine.json` state can be controlled from the HUD or from the `spine` command line.
 
-> Current test release: v0.2.0-alpha.1
+> Current test release: v0.2.0-alpha.2
 
 ![Spine HUD v0.2](docs/images/spine-hud-v0.2.png)
 
